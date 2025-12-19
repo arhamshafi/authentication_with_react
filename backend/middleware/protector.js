@@ -9,10 +9,11 @@ const Auth = async (req, res, next) => {
 
         const token = authHeader.split(" ")[1]
         const decoded = jwt.verify(token, process.env.SECRETKEY)
-        req.user = decoded
+        req.user = decoded.id
         next()
     } catch (err) {
-        console.log(err.message)
+        console.log(err);
+        
         return res.status(401).json({ message: "Invalid or expired token" })
     }
 }

@@ -23,9 +23,8 @@ const userSchema = new mongoose.Schema({
         minLength: 6
     },
     verified: {
-        type: String,
-        default: "no",
-        enum: ["no", "yes"]
+        type: Boolean,
+        default: false,
     },
     selectedCourses: {
         type: [String],
@@ -42,7 +41,7 @@ const userSchema = new mongoose.Schema({
 })
 
 userSchema.pre("save", async function () {
-    if (!this.isModified("password")) return 
+    if (!this.isModified("password")) return
     const salt = await bcrypt.genSalt(12)
     this.password = await bcrypt.hash(this.password, salt)
 })

@@ -1,9 +1,12 @@
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Login_service } from '../services/authservices'
 import toast from 'react-hot-toast'
+import { AppContext } from '../Context'
 
 export default function Signin() {
+
+  const { userMe } = useContext(AppContext)
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -11,7 +14,6 @@ export default function Signin() {
   const navigate = useNavigate()
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [rememberMe, setRememberMe] = useState(false)
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -40,8 +42,10 @@ export default function Signin() {
     if (!res.success) return toast.error(res.message)
     setFormData({ email: "", password: "" })
     toast.success(res.message)
+    await userMe()
     navigate("/")
   }
+
 
   return (
     <div className='w-full min-h-screen bg-black flex justify-center items-center px-4'>
@@ -92,8 +96,6 @@ export default function Signin() {
                 <input
                   type='checkbox'
                   id='rememberMe'
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
                   className='w-4 h-4 bg-gray-800 border border-gray-700 rounded cursor-pointer'
                 />
                 <label htmlFor='rememberMe' className='ml-2 text-sm text-gray-400 cursor-pointer'>
