@@ -1,33 +1,30 @@
-import axios from "axios";
+import axios from "axios"
 
-const Api_base_url = "http://localhost:5656/studentdata"
+const BASE_URL = "http://localhost:5656/studentdata"
+
 const api = axios.create({
-    baseURL: Api_base_url,
-    headers: { "Content-Type": "application/json" }
+    baseURL: BASE_URL,
+    withCredentials: true,
+    headers: {
+        "Content-Type ": "application/json"
+    }
 })
 
-api.interceptors.request.use(
-    (config) => {
-        const token = sessionStorage.getItem("token")
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`
-        }
-        return config
-    },
-    (error) => {
-        return Promise.reject(error)
-    }
-)
-
 api.interceptors.response.use(
-    (response) => response, (error) => {
-        if (error.response?.status == 401) {
-            sessionStorage.removeItem("token")
-            sessionStorage.removeItem("activeUser")
+    (response) => response,
+    (error) => {
+        const status = error?.response?.status;
+        const authStatus = error?.response?.data?.authStatus;
+        const skipRedirect = error?.config?.headers?.["X-Skip-Auth-Redirect"];
+        if (!skipRedirect && (status === 401 || authStatus === "NO_TOKEN" || authStatus === "INVALID")) {
+            console.log("🔒 Auth failed — clearing token and redirecting to signin");
+            localStorage.removeItem("token")
             window.location.href = "/signin"
         }
-        return Promise.reject(error)
+
+        return Promise.reject(error);
     }
-)
+);
+
 
 export default api

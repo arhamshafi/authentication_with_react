@@ -12,10 +12,11 @@ import {
   FaLayerGroup
 } from 'react-icons/fa'
 import toast from 'react-hot-toast'
+import AiCOMP from '../component/Artificial'
 
 export default function Courses() {
 
-  const { courses, selectCoursebyUser, handleSelectCourse } = useContext(AppContext)
+  const { courses, selectCoursebyUser, handleSelectCourse, me } = useContext(AppContext)
 
   const getSkillIcon = (skill) => {
     const skillLower = skill.toLowerCase();
@@ -40,6 +41,7 @@ export default function Courses() {
   return (
     <div className='w-full min-h-screen bg-linear-to-br from-gray-900 to-black text-white'>
       <Navbar />
+      <AiCOMP />
 
       <div className="container mx-auto px-4 py-8 pt-20">
         {/* Page Header */}
@@ -180,16 +182,27 @@ export default function Courses() {
                               </div>
                             </td>
                             <td className="px-6 py-4">
-                              <button
-                                onClick={() => handleSelectCourse(course._id)}
-                                className={`px-4 py-2 rounded-lg text-sm transition-all duration-150 cursor-pointer ease-linear 
+                              {
+                                me?.role === "admin" ? (
+                                  <button
+                                    onClick={() => toast.success("This Feature is Under Development")}
+                                    className={`px-4 py-2 rounded-lg text-sm active:bg-red-400 active:scale-95 transition-all duration-150 cursor-pointer bg-red-600 text-white ease-linear `} >
+                                    Delete
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleSelectCourse(course._id)}
+                                    className={`px-4 py-2 rounded-lg text-sm transition-all duration-150 cursor-pointer ease-linear 
                                       ${selectCoursebyUser.includes(course._id)
-                                    ? "bg-gray-500 cursor-not-allowed"
-                                    : "bg-blue-600 hover:bg-blue-700 active:scale-95 text-white"
-                                  }`}
-                              >
-                                {selectCoursebyUser.includes(course._id) ? "Selected" : "Select"}
-                              </button>
+                                        ? "bg-gray-500 cursor-not-allowed"
+                                        : "bg-blue-600 hover:bg-blue-700 active:scale-95 text-white"
+                                      }`}
+                                  >
+                                    {selectCoursebyUser.includes(course._id) ? "Selected" : "Select"}
+                                  </button>
+                                )
+                              }
+
                             </td>
                           </tr>
                         ))}
@@ -214,6 +227,6 @@ export default function Courses() {
           )}
         </div>
       </div>
-    </div>
+    </div >
   )
 }

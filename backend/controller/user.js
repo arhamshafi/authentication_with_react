@@ -9,21 +9,12 @@ module.exports.FetchCourse = async (req, res, next) => {
         next(err)
     }
 }
-module.exports.MyAcc = async (req, res, next) => {
-    try {
-        const { email } = req.params
-        const crnt = await User.findOne({ email })
-        if (!crnt) return res.status(400).json({ message: "User Not Found", success: false })
-        res.status(200).json({ message: "Successfully Get User", success: true, crnt })
-    } catch (err) {
-        next(err)
-    }
-}
+
 module.exports.SelectedCourses = async (req, res, next) => {
     try {
         const crnt = await User.findById(req.user)
         if (!crnt) return res.status(401).json({ message: "User Not Found", success: false })
-        if (crnt && !crnt.verified) return res.status(400).json({ message: "Verify Your Profile", success: false })
+        if (crnt && !crnt.DocumentVerification) return res.status(400).json({ message: "Verify Your Profile", success: false })
         crnt.selectedCourses = req.body
         await crnt.save()
         res.status(200).json({ message: "Course selected", success: true })
@@ -31,7 +22,6 @@ module.exports.SelectedCourses = async (req, res, next) => {
         next(err)
     }
 }
-
 module.exports.UpdateProfile = async (req, res, next) => {
     try {
         const crntUser = await User.findById(req.user)
@@ -41,7 +31,7 @@ module.exports.UpdateProfile = async (req, res, next) => {
         crntUser.documents.idCard = req.body.idCard
 
         if (crntUser.documents.qualification && crntUser.documents.idCard) {
-            crntUser.verified = true
+            crntUser.DocumentVerification = true
         }
         await crntUser.save()
         res.status(200).json({ success: true, message: "Successfully Updated", user: { email: crntUser.email, name: crntUser.name, role: crntUser.role } })
@@ -49,7 +39,6 @@ module.exports.UpdateProfile = async (req, res, next) => {
         next(err)
     }
 }
-
 module.exports.DeleteCourse = async (req, res, next) => {
     try {
         const { id } = req.params
@@ -64,3 +53,35 @@ module.exports.DeleteCourse = async (req, res, next) => {
         next(err)
     }
 }
+module.exports.GetMe = async (req, res, next) => {
+    try {
+        const userId = req.user
+        console.log("GETME :", userId)
+
+        const user = await User.findById(userId)
+
+        if (!user) {
+            return res.status(400).json({
+                message: "User not found",
+                success: false
+            })
+        }
+
+        if (user && !user.emailVerified) {
+            return res.status(400).json({
+                message: "Email not verified",
+                success: false,
+                emailVerified: false
+            })
+        }
+
+        res.status(200).json({
+            user,
+            success: true
+        })
+    } catch (err) {
+        console.error('GetMe error:', err)
+    }
+}
+
+

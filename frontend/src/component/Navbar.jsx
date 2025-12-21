@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
     FaCrown,
     FaHome,
@@ -13,35 +13,30 @@ import {
     FaTimes
 } from "react-icons/fa";
 import { AppContext } from '../Context';
+import { Logout_service } from '../services/authservices';
 
 export default function Navbar() {
 
-    const { setselectCoursebyUser } = useContext(AppContext)
-    const [user, setuser] = useState(null)
+    const { me, setme, setselectCoursebyUser } = useContext(AppContext)
+    const navigate = useNavigate()
+
     const [profile, setprofile] = useState(false)
     const [mobileMenu, setMobileMenu] = useState(false)
     const dropdown = useRef(null)
     const mobileMenuRef = useRef(null)
 
-    const LogOut = () => {
-        sessionStorage.removeItem("activeUser")
-        sessionStorage.removeItem("token")
-        setuser(null)
-        setprofile(false)
-        setselectCoursebyUser([])
-        toast.success("Logged out successfully!")
-    }
-
-    useEffect(() => {
-        const storedUser = sessionStorage.getItem("activeUser")
-        if (storedUser) {
-            try {
-                setuser(JSON.parse(storedUser))
-            } catch (error) {
-                console.error("Error parsing user data:", error)
+    const LogOut = async () => {
+        try {
+            const res = await Logout_service()
+            if (res.success) {
+                setme(null)
+                setselectCoursebyUser([])
+                toast.success(res.message)
             }
+        } catch (err) {
+            toast.error(er?.response?.data?.message)
         }
-    }, [])
+    }
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -60,7 +55,7 @@ export default function Navbar() {
     }, [])
 
     return (
-        <nav className={`w-full bg-linear-to-r from-gray-900 to-black text-white shadow-2xl fixed top-0 left-0 z-50 ${user?.role === "admin" ? "px-4 md:px-8" : "px-4 md:px-12"}`}>
+        <nav className={`w-full bg-linear-to-r from-gray-900 to-black text-white shadow-2xl fixed top-0 left-0 z-50 ${me?.role === "admin" ? "px-4 md:px-8" : "px-4 md:px-12"}`}>
             <div className="container mx-auto">
                 <div className="flex justify-between items-center h-20">
 
@@ -84,32 +79,52 @@ export default function Navbar() {
                                     <span className="font-medium">Home</span>
                                 </li>
                             </Link>
+
                             <Link to="/courses">
                                 <li className="group px-5 py-3 rounded-lg hover:bg-gray-800 transition-all duration-300 flex items-center space-x-2">
                                     <FaBook className="text-green-400 group-hover:text-green-300" />
                                     <span className="font-medium">Courses</span>
                                 </li>
                             </Link>
-                            <Link to={"/stdDashboard"} >
+                            {
+                                me?.role === "admin" ? (
+                                    <>
+                                        <Link to="/adminDashboard">
+                                            <li className="group px-5 py-3 rounded-lg hover:bg-gray-800 transition-all duration-300 flex items-center space-x-2 cursor-pointer">
+                                                <FaChartBar className="text-yellow-400 group-hover:text-yellow-300" />
+                                                <span className="font-medium">Dashboard</span>
+                                            </li>
+                                        </Link>
+                                    </>
+                                ) : (
+                            <>
+                                <Link to="/stdDashboard">
+                                    <li className="group px-5 py-3 rounded-lg hover:bg-gray-800 transition-all duration-300 flex items-center space-x-2 cursor-pointer">
+                                        <FaChartBar className="text-yellow-400 group-hover:text-yellow-300" />
+                                        <span className="font-medium">Dashboard</span>
+                                    </li>
+                                </Link>
+
                                 <li
+                                    onClick={() => toast.error("Contact feature under development")}
                                     className="group px-5 py-3 rounded-lg hover:bg-gray-800 transition-all duration-300 flex items-center space-x-2 cursor-pointer"
                                 >
-                                    <FaChartBar className="text-yellow-400 group-hover:text-yellow-300" />
-                                    <span className="font-medium">Dashboard</span>
+                                    <FaEnvelope className="text-red-400 group-hover:text-red-300" />
+                                    <span className="font-medium">Contact</span>
                                 </li>
-                            </Link>
-                            <li
-                                onClick={() => toast.error("Contact feature under development")}
-                                className="group px-5 py-3 rounded-lg hover:bg-gray-800 transition-all duration-300 flex items-center space-x-2 cursor-pointer"
-                            >
-                                <FaEnvelope className="text-red-400 group-hover:text-red-300" />
-                                <span className="font-medium">Contact</span>
-                            </li>
+
+                            </>
+                            )
+                            }
+
+
+
+
                         </ul>
                     </div>
 
                     <div className="flex items-center space-x-4">
-                        {!user ? (
+                        {!me ? (
                             <>
                                 <Link to="/signin" className="hidden md:block">
                                     <button className="group px-6 py-2.5 rounded-lg bg-linear-to-r from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 border border-gray-700 transition-all duration-300 flex items-center space-x-2">
@@ -133,27 +148,26 @@ export default function Navbar() {
                                     >
                                         <div className="w-10 h-10 rounded-full bg-linear-to-r from-blue-500 to-purple-500 flex items-center justify-center">
                                             <span className="font-bold text-white">
-                                                {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+                                                {me.name ? me.name.charAt(0).toUpperCase() : "U"}
                                             </span>
                                         </div>
-                                        <span className="hidden md:block font-medium">{user.name}</span>
+                                        <span className="hidden md:block font-medium">{me.name}</span>
                                     </div>
 
-                                    {/* Profile Dropdown */}
                                     {profile && (
                                         <div className="absolute right-0 mt-3 w-80 bg-gray-900 rounded-xl shadow-2xl border border-gray-800 overflow-hidden z-50">
                                             <div className="p-6 bg-linear-to-r from-gray-800 to-gray-900">
                                                 <div className="flex items-center space-x-4">
                                                     <div className="w-16 h-16 rounded-full bg-linear-to-r from-blue-600 to-purple-600 flex items-center justify-center">
                                                         <span className="text-2xl font-bold text-white">
-                                                            {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+                                                            {me.name ? me.name.charAt(0).toUpperCase() : "U"}
                                                         </span>
                                                     </div>
                                                     <div>
-                                                        <h3 className="text-xl font-bold">{user.name}</h3>
-                                                        <p className="text-sm text-gray-400">{user.email}</p>
+                                                        <h3 className="text-xl font-bold">{me.name}</h3>
+                                                        <p className="text-sm text-gray-400">{me.email}</p>
                                                         <span className="inline-block mt-1 px-3 py-1 bg-blue-900/30 text-blue-400 text-xs rounded-full">
-                                                            {user.role === "admin" ? "Administrator" : "Student"}
+                                                            {me.role === "admin" ? "Administrator" : "Student"}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -163,18 +177,9 @@ export default function Navbar() {
                                                 <div className="space-y-3">
                                                     <div className="flex items-center justify-between p-3 hover:bg-gray-800 rounded-lg transition-colors">
                                                         <span className="font-medium">Account Type</span>
-                                                        <span className="text-blue-400 capitalize">{user.role}</span>
+                                                        <span className="text-blue-400 capitalize">{me.role}</span>
                                                     </div>
-                                                    {user.role === "admin" && (
-                                                        <Link
-                                                            to="/adminDashboard"
-                                                            className="flex items-center justify-between p-3 hover:bg-gray-800 rounded-lg transition-colors"
-                                                            onClick={() => setprofile(false)}
-                                                        >
-                                                            <span className="font-medium">Admin Dashboard</span>
-                                                            <FaCrown className="text-yellow-500" />
-                                                        </Link>
-                                                    )}
+
                                                     <button
                                                         onClick={LogOut}
                                                         className="w-full flex items-center justify-center space-x-2 p-3 bg-linear-to-r from-red-900/30 to-red-800/30 hover:from-red-800/40 hover:to-red-700/40 text-red-400 rounded-lg transition-all duration-300 mt-4"
@@ -225,16 +230,14 @@ export default function Navbar() {
                                 <FaBook className="text-green-400" />
                                 <span>Courses</span>
                             </Link>
-                            <div
-                                className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer"
-                                onClick={() => {
-                                    toast.error("Feature coming soon!");
-                                    setMobileMenu(false);
-                                }}
+                            <Link
+                                to="/stdDashboard"
+                                className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-800 transition-colors"
+                                onClick={() => setMobileMenu(false)}
                             >
                                 <FaChartBar className="text-yellow-400" />
                                 <span>Dashboard</span>
-                            </div>
+                            </Link>
                             <div
                                 className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer"
                                 onClick={() => {
@@ -246,8 +249,7 @@ export default function Navbar() {
                                 <span>Contact</span>
                             </div>
 
-                            {/* Mobile Auth Buttons */}
-                            {!user ? (
+                            {!me ? (
                                 <div className="pt-4 border-t border-gray-800 space-y-2">
                                     <Link
                                         to="/signin"
@@ -268,11 +270,10 @@ export default function Navbar() {
                                 <div className="pt-4 border-t border-gray-800">
                                     <div className="p-3">
                                         <p className="text-sm text-gray-400">Logged in as</p>
-                                        <p className="font-bold">{user.name}</p>
-                                        <p className="text-sm text-gray-400">{user.email}</p>
+                                        <p className="font-bold">{me.name}</p>
+                                        <p className="text-sm text-gray-400">{me.email}</p>
                                     </div>
                                     <button
-                                        onClick={LogOut}
                                         className="w-full p-3 rounded-lg bg-red-900/30 hover:bg-red-800/40 text-red-400 transition-colors mt-2"
                                     >
                                         Log Out

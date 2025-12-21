@@ -1,6 +1,8 @@
 import React, { useContext } from 'react'
 import { AppContext } from '../Context'
 import Navbar from '../component/Navbar';
+import AiCOMP from "../component/Artificial"
+
 
 export default function Home() {
 
@@ -9,7 +11,8 @@ export default function Home() {
 
     return (
         <div className='w-full min-h-screen flex justify-center items-center bg-black text-white '>
-            <Navbar/>
+            <Navbar />
+            <AiCOMP />
             HOME PAGE
         </div>
     )

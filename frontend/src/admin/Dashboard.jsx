@@ -3,6 +3,7 @@ import Navbar from '../component/Navbar'
 import { AppContext } from '../Context'
 import { FaEdit, FaTrash, FaBook, FaCalendarAlt, FaCode, FaPlusCircle, FaPlus } from 'react-icons/fa'
 import { DelServices } from '../services/admin'
+import toast from 'react-hot-toast'
 
 export default function Courses() {
 
@@ -18,6 +19,7 @@ export default function Courses() {
             if (res.success) {
                 toast.success(res.message)
                 FetchAllCourses()
+                setDeletePop(false)
             }
 
         } catch (err) {
@@ -26,7 +28,7 @@ export default function Courses() {
     }
 
     return (
-        <div className='w-full min-h-screen bg-gray-50'>
+        <div className='w-full min-h-screen bg-gray-50 px-7'>
             <Navbar />
             <div className={`w-full min-h-screen backdrop-blur-[2px] transition-all duration-200 ease-linear bg-black/20 fixed top-0 left-0 flex justify-center items-center ${form ? "opacity-100 visible" : "opacity-0 invisible "} `} onClick={() => setform(false)} >
                 <form onSubmit={addCourse} className='w-195 h-max p-8 bg-white shadow-xl rounded-xl ' onClick={(e) => e.stopPropagation()} >

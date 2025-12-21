@@ -1,13 +1,13 @@
 import { createContext, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { Add_course, UpdateCousrService } from "./services/admin";
-import { GetDetailService, SelectedCourseServices } from "./services/user";
-import api from "./utils/api";
+import { GetDetailService, GetMeService, SelectedCourseServices } from "./services/user";
+import { AIchatService } from "./services/aiChat";
+
 
 export const AppContext = createContext()
 
 export const AppProvider = ({ children }) => {
-
 
     const [formdata, setformdata] = useState({ title: "", duration: "", skill: "", description: "" })
     const [updateformdata, setupdateformdata] = useState({ title: "", duration: "", skill: "", description: "" })
@@ -16,8 +16,34 @@ export const AppProvider = ({ children }) => {
     const [courses, setcourse] = useState([])
     const [me, setme] = useState(null)
     const [selectCoursebyUser, setselectCoursebyUser] = useState([])
+    const [input, setInput] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [open, setopen] = useState(false)
+    const [authLoading, setAuthLoading] = useState(true)
+    const [messages, setMessages] = useState([
+        {
+            role: 'bot',
+            text: 'Hello! I am your AI assistant. How can I help you today?',
+        }
+    ]);
 
-
+    const sendMessage = async () => {
+        if (!input.trim() || loading) return;
+        try {
+            const userMessage = input;
+            setInput("");
+            setLoading(true);
+            setMessages(prev => [...prev, { role: "user", text: userMessage }]);
+            const res = await AIchatService(userMessage)
+            if (res.success) {
+                setMessages(prev => [...prev, { role: "bot", text: res.reply }])
+            }
+        } catch (err) {
+            console.log(err?.response?.data?.message);
+        } finally {
+            setLoading(false)
+        }
+    }
     const adminformhandler = (e) => {
         const { name, value } = e.target
         setformdata({ ...formdata, [name]: value })
@@ -39,22 +65,18 @@ export const AppProvider = ({ children }) => {
                 setformdata({ title: "", duration: "", skill: "", description: "" })
                 FetchAllCourses()
             }
-
         } catch (err) {
             toast.error(err?.response?.data?.message)
-        }
-        finally {
+        } finally {
             setfrmLoader(false)
         }
     }
     const FetchAllCourses = async () => {
         try {
-
             const res = await GetDetailService()
             if (res.success) {
                 setcourse(res.details)
             }
-
         } catch (err) {
             toast.error(err?.response?.data?.message || "Server issue")
         }
@@ -72,33 +94,19 @@ export const AppProvider = ({ children }) => {
                 setEditFormVisible(false)
                 FetchAllCourses()
             }
-
         } catch (err) {
             toast.error(err?.response?.data?.message)
         } finally {
             setfrmLoader(false)
         }
     }
-    const userMe = async () => {
-        try {
-            const crntuser = sessionStorage.getItem("activeUser") ? JSON.parse(sessionStorage.getItem("activeUser")) : null
-
-            if (!crntuser) {
-                setme(null)
-                setselectCoursebyUser([])
-                return
-            }
-            const res = await api.post(`/user/me/${crntuser.email}`)
-            const { crnt } = res.data
-            setme(crnt)
-            setselectCoursebyUser(crnt?.selectedCourses || [])
-        } catch (err) {
-            console.log(err?.response?.data?.message);
-            setme(null)
-            setselectCoursebyUser([])
-        }
-    }
     const handleSelectCourse = async (id) => {
+        if (authLoading) return
+
+        if (!me) {
+            toast.error("Please sign in first")
+            return
+        }
         if (selectCoursebyUser.includes(id)) {
             toast.error("Course already selected!");
             return;
@@ -110,25 +118,37 @@ export const AppProvider = ({ children }) => {
 
             if (res.success) {
                 toast.success(res.message);
-                await userMe(); 
+                await GetMe()
             }
         } catch (err) {
             toast.error(err?.response?.data?.message || "Something went wrong");
         }
     };
+    const GetMe = async () => {
+        try {
+            const token = localStorage.getItem("token")
+            if (!token) return
+            const res = await GetMeService()
+            if (res.success) {
+                setme(res.user)
+                setselectCoursebyUser(res.user.selectedCourses || [])
+            }
+        } catch (err) {
+            console.log(err?.response?.data?.message)
+        } finally {
+            setAuthLoading(false)
+        }
+    }
 
-
-    useEffect(() => { 
+    useEffect(() => {
         FetchAllCourses()
-        userMe() 
+        GetMe()
     }, [])
-
-   
 
     return (
         <AppContext.Provider value={{
-            adminformhandler, addCourse, frmLoader, formdata, setfrmLoader, courses, setupdateformdata, me, handleSelectCourse, selectCoursebyUser, userMe,
-            FetchAllCourses, UpdateCourseDetails, updateformdata, updateHnalder, EditFormVisible, setEditFormVisible, setselectCoursebyUser
+            adminformhandler, addCourse, frmLoader, formdata, setfrmLoader, courses, setupdateformdata, me, setme, handleSelectCourse, selectCoursebyUser, open, setopen, authLoading,
+            FetchAllCourses, UpdateCourseDetails, updateformdata, updateHnalder, EditFormVisible, setEditFormVisible, setselectCoursebyUser, messages, input, setInput, loading, sendMessage, GetMe
         }} >
             {children}
         </AppContext.Provider>

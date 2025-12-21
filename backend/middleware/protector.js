@@ -1,21 +1,21 @@
 const jwt = require("jsonwebtoken")
 
+
 const Auth = async (req, res, next) => {
     try {
-        const authHeader = req.header("Authorization")
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return res.status(401).json({ message: "Token missing or malformed" })
-        }
+        const token = req.cookies.userToken
 
-        const token = authHeader.split(" ")[1]
+        if (!token) {
+            return res.status(401).json({ message: "Token is Missing", success: false, authStatus: "NO_TOKEN" })
+        }
+        // console.log("Auth Token : ", token);
         const decoded = jwt.verify(token, process.env.SECRETKEY)
+        if (!decoded) return res.status(401).json({ message: "InvaliD Token", success: false, authStatus: "INVALID" })
         req.user = decoded.id
         next()
+
     } catch (err) {
-        console.log(err);
-        
-        return res.status(401).json({ message: "Invalid or expired token" })
+        next(err)
     }
 }
-
 module.exports = Auth

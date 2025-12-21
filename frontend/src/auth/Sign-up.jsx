@@ -41,20 +41,25 @@ export default function Signup() {
       setError('Password must be at least 6 characters')
       return
     }
+
     setLoading(true)
     const sendData = {
       name: formData.name,
       email: formData.email,
       password: formData.password
     }
-    
+
     const res = await Register_service(sendData)
     setLoading(false)
-    if (!res.success) return toast.error(res.message)
+
+    if (!res.success) {
+      toast.error(res.message)
+      return
+    }
+
     setFormData({ name: "", email: "", password: "", confirmPassword: "" })
     toast.success(res.message)
-    navigate("/")
-
+    setTimeout(() => navigate("/signin"), 2000)
   }
 
   return (

@@ -25,3 +25,10 @@ export const deeleteSelectedCourse = async (id) => {
     const { message, success } = res.data
     return { message, success }
 }
+
+export const GetMeService = async () => {
+
+    const res = await api.get("/user/getme")
+    const { user, success } = res.data
+    return { user, success }
+}

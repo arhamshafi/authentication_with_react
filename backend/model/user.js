@@ -1,4 +1,3 @@
-
 const mongoose = require("mongoose")
 const bcrypt = require("bcrypt")
 
@@ -22,9 +21,21 @@ const userSchema = new mongoose.Schema({
         required: true,
         minLength: 6
     },
-    verified: {
+    DocumentVerification: {
+        type: Boolean,
+        default: false
+    },
+    emailVerified: {
         type: Boolean,
         default: false,
+    },
+    verificationToken: {
+        type: String,
+        default: null
+    },
+    verificationTokenExpiry: {
+        type: Date,
+        default: null
     },
     selectedCourses: {
         type: [String],
@@ -36,7 +47,7 @@ const userSchema = new mongoose.Schema({
     },
     createdAt: {
         type: Date,
-        default: new Date()
+        default: Date.now
     }
 })
 

@@ -16,9 +16,10 @@ import {
     FaTrash
 } from 'react-icons/fa'
 import { deeleteSelectedCourse, UpdateProfile_service } from '../services/user'
+import AiCOMP from '../component/Artificial'
 
 export default function StudentDashboard() {
-    const { courses, me, userMe } = useContext(AppContext)
+    const { courses, me, GetMe  } = useContext(AppContext)
     const [DeletePop, setDeletePop] = useState(false)
     const [deleteCourseId, setDeleteCourseId] = useState(null)
 
@@ -75,7 +76,7 @@ export default function StudentDashboard() {
                 toast.success("Profile updated successfully!")
                 sessionStorage.setItem("activeUser", JSON.stringify({ name: res.user.name, email: res.user.email, role: res.user.role }))
                 setEditMode(false)
-                await userMe()
+                await GetMe()
             }
         } catch (error) {
             toast.error("Failed to update profile")
@@ -101,7 +102,7 @@ export default function StudentDashboard() {
             const res = await deeleteSelectedCourse(id)
             if (res.success) {
                 toast.success(res.message)
-                await userMe()
+                await GetMe()
             }
 
         } catch (err) {
@@ -116,6 +117,7 @@ export default function StudentDashboard() {
         return (
             <div className='w-full min-h-screen bg-gray-50'>
                 <Navbar />
+                <AiCOMP />
                 <div className="container mx-auto px-4 py-8 pt-24 text-center">
                     <h1 className="text-2xl text-gray-600">Please login to view dashboard</h1>
                 </div>
@@ -126,8 +128,7 @@ export default function StudentDashboard() {
     return (
         <div className='w-full min-h-screen bg-gray-50'>
             <Navbar />
-            {/* ////////// */}
-
+            <AiCOMP />
             <div className={` w-full min-h-screen flex justify-center items-center fixed top-0 left-0 backdrop-blur-[2px] ${DeletePop ? "opacity-100 visible" : "opacity-0 invisible "} `}>
                 <div className="bg-gray-900 text-white rounded-xl p-6 w-120 text-center">
                     <h2 className="text-lg font-bold mb-4">Confirm Delete</h2>
@@ -410,10 +411,11 @@ export default function StudentDashboard() {
                                     <FaUser className="text-white text-2xl" />
                                 </div>
                                 <div>
+                                    
                                     <h3 className="text-xl font-bold">Account Status</h3>
                                     <div className="flex items-center gap-2 mt-1">
-                                        <FaCheckCircle className={me.verified ? "text-green-400" : "text-yellow-400"} />
-                                        <span>{me.verified ? "Verified Account" : "Pending Verification"}</span>
+                                        <FaCheckCircle className={me.DocumentVerification ? "text-green-400" : "text-yellow-400"} />
+                                        <span>{me.DocumentVerification ? "Verified Account" : "Pending Verification"}</span>
                                     </div>
                                 </div>
                             </div>
